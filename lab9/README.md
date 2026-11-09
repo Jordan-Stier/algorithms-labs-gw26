@@ -89,11 +89,14 @@ order, are `[0, 1, 1, 2, 1]`. Visit neighbors in the order shown.
 | Vertex removed | Queue afterward | In-degree of `D` |
 |---|---|---|
 | A | `[B, C]` | 2 |
-| B | TODO | TODO |
-| C | TODO | TODO |
+| B | `[C]`| 1 |
+| C | `[D]` | 0 |
 
 Now add the edge `E -> B`. Which vertices reach the output before the
 algorithm stops? What does the function return?
+
+A and C reach the output before it stops. This is only 2 vertices, which is less 
+than 5 (|V|), so the function returns none.
 
 ### 1.2 Implementation
 
@@ -132,6 +135,12 @@ processed before that vertex, so one pass over the edges is enough.
 terms of `V` vertices and `E` edges, excluding storage for the input graph.
 Briefly explain how often each vertex enters the queue and each edge is checked.
 
+Kahn's algorithm has time bounds of O(V+E) in the worst case, and extra-space
+bounds of O(V) - Each vertex enters the queue once (when all parents have been 
+fully processed & in(v)=0), and every edge is checked 1x when when processing the 
+parent vert and decrementing in(v). O(V) + O(E) = O(V+E).  
+Extra space of O(V) because the queue has at most |V| verts, & the indegree arr has
+|V| values.
 ---
 
 ## Part 2: Kruskal's Algorithm and Union-Find
@@ -246,21 +255,34 @@ rank   = [2, 0, 1, 0, 0]
 **TODO 2.2:** Continue from this state. Record roots after the two `find`
 calls, then decide whether the edge is accepted.
 
-| Edge | Roots | Accept? | Total weight |
-|---|---|---|---|
-| `(B, D): 4` | TODO | TODO | TODO |
-| `(A, C): 5` | TODO | TODO | TODO |
-| `(D, E): 6` | TODO | TODO | TODO |
+| Edge        | Roots   | Accept? | Total weight |
+| ----------- | ------- | ------- | ------------ |
+| `(B, D): 4` | `(A,C)` | Yes     | 10           |
+| `(A, C): 5` | `(A,A)` | No      | 10           |
+| `(D, E): 6` | `(A,E)` | Yes     | 15           |
 
 After checking `(B, D)`, what is `parent[D]`? Explain why a rejected edge
 can still change the parent array. Does Kruskal examine `(C, E): 7`?
 
+`parent[D]` is `A` (find(B) gives A, find(D) does D->C->A, A is made D's directly). A rejected edge can still change the parent array because find() compresses paths, shortening the
+paths in the structure.
+
+Kruskal doesn't examine `(C,E)` because a spanning tree has |V|-1 = 4 edges, and it already
+accepted edges `(A,B)`, `(C,D)`, `(B,C)`, and `(D,E)`.
 ### 2.3 Analysis
 
 **TODO 2.3:** For a connected graph, give Kruskal's total time bound,
 including initialization and sorting. You may use the lecture's amortized
 bound of `O(α(V))` per union-find operation, where `α` grows extremely slowly.
 Which step dominates? What changes if the edges are already sorted?
+
+Kruskal's time bound is O(V+ElogE+E$\alpha$(V)) - O(V) to init the parent and rank 
+arrays, O(ElogE) 
+to sort edges (if you're using a good sorting algo), and  O(E$\alpha$(V)) to process 
+edges with find and union. The sorting step dominates, O(ElogE). If the edges are 
+already sorted, the other steps have similar bounds as $\alpha$(V) is approximately 
+constant (E$\alpha$(V) is roughly linear), it's ~ O(V+E). In a connected graph, E>= 
+V-1, so O(V+E) -> O(E)
 
 ---
 
