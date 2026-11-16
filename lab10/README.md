@@ -116,17 +116,17 @@ a disconnected graph.
 using its two endpoint labels.
 
 | Vertex removed | Edge added | `key[D]` | `key[E]` |
-|---|---|---|---|
-| `B` | TODO | TODO | TODO |
-| `C` | TODO | TODO | TODO |
-| `D` | TODO | TODO | TODO |
+| -------------- | ---------- | -------- | -------- |
+| `B`            | A-B: 2     | 4        | inf      |
+| `C`            | B-C: 1     | 4        | 6        |
+| `D`            | B-D: 4     | 4        | 6        |
 
 1. Which vertex becomes `C`'s parent, and what causes the change? 
-
+B becomes C's parent because when B is removed from the queue, the edge connection between the two is lighter than the pre-cut connection A-C, updating its parent from A to B.
 
 2. After removing `E`, what are the tree's four edges and total weight? 
-
-
+A-B: 2, B-C: 1, B-D: 4, C-E: 6
+For a total Edge Weight of 13
 
 ### 1.2 Implementation
 
@@ -198,15 +198,15 @@ relaxations in execution order. Record the distance and parent of `v`
 after each check, including checks that leave them unchanged.
 
 | Edge checked | Candidate | Distance of `v` | Parent of `v` |
-|---|---|---|---|
-| `B -> C` | TODO | TODO | TODO |
-| `C -> D` | TODO | TODO | TODO |
-| `C -> E` | TODO | TODO | TODO |
-| `D -> E` | TODO | TODO | TODO |
+| ------------ | --------- | --------------- | ------------- |
+| `B -> C`     | 2+1 = 3   | 3 (A->C)        | A             |
+| `C -> D`     | 3+5 = 8   | 6 (A->B->D)     | B             |
+| `C -> E`     | 3+6 = 9   | 9 (A->C->E)     | C             |
+| `D -> E`     | 6+7 = 13  | 9 (A->C->E)     | C             |
 
 Give the final distance array and the shortest path from `A` to `E`:
-
- **TODO**
+A->B, 2; A->C, 3; B->D, 4; C->E, 6 -- dist = [0, 2, 3, 6, 9]
+A->C->E = 3+6 = 9
 
 ### 2.2 Implementation
 
@@ -222,13 +222,17 @@ undirected graphs, including graphs with unreachable vertices.
 1. Change only the weight of `A--C` to `2.5`. Starting from `A`, what is
    `C`'s parent under each algorithm? What quantity does each algorithm
    minimize? 
-
+In prim: C's parent remains B, because when B enters the tree, an edge of 1 (B->C) is still less than the existing 2.5 (A->C).
+Prim minimizes the total edge weight of the spanning tree.
+In dijkstra: C's parent remains A, because the A->B->C route costs 2+1 = 3, which is not less than the A->C route of 2.5.
+Dijkstra minimizes the total weight of the path from its source node to any reachable destination node.
 
 2. Consider the directed edges `S -> A: 2`, `S -> B: 5`, and `B -> A: -4`.
    Starting from `S`, which distance does Dijkstra finalize too early?
    Give the actual shortest distance and explain why the negative edge
    causes a problem.
-
+Dijkstra finalizes distance[A] too early because it does not expect edges that pay to use (cost < 0). It assumes the distance to a vertex removed from the priority queue is final.
+The actual shortest distance is distance[A] = 1, found through S->B->A (cost = 5+ -4 = 1), but dijkstra records it as 2, via S->A (cost = 2).
 
 3. Let `V` and `E` be the numbers of vertices and edges. For the provided
    heap, building the queue takes `O(V)`, each removal or decrease takes
@@ -237,7 +241,15 @@ undirected graphs, including graphs with unreachable vertices.
    auxiliary space bounds. Exclude the input graph from space. What is
    the time bound if finding the minimum instead scans an unsorted array
    of vertices?
+Prim: O(V) removals, since if they're connected, each vertex enters the minimum spanning tree once. O(E) possible decreases, every edge can potentially reduce a vertex's key.
+worst case time: **O((V+E)logV)**
+space: **O(V)** - key arr, parent arr, and queue all take O(V) elems. 
 
+Dijkstra: O(V) removals, 1/vert. O(E) possible decreases, every edge may better a neighbor's distance.
+worst case time: **O((V+E)logV)**
+space: **O(V)** - dist arr, parent arr, and queue all take O(V) elems
+
+If using an unsorted array, the time to remove O(V) (can't just pop the top and re-MIN HEAPIFY), but the time to decrease the key is O(1) - no need to reorder - so both have a worst case bound of O(V\*O(V) + E\*O(1)) -> O(V^2 + E) -> **O(V^2)**
 
 ---
 
